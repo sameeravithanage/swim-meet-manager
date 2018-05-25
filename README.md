@@ -1,2 +1,6 @@
 # swim-meet-manager
-an online system to manage swimming meets
+script to work with google sheets to handle entries of a swimming meet. 
+
+prerequisites: python2, gspread, google-auth 
+
+
