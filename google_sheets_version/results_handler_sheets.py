@@ -5,15 +5,16 @@ from pprint import pprint
 
 
 def collectEventResults():
+	event = raw_input('Enter Event: ')
 	creds = service_account.Credentials.from_service_account_file('client_secret.json')
 	scoped_credentials = creds.with_scopes(['https://spreadsheets.google.com/feeds'])
 	gc = gspread.Client(auth=scoped_credentials)
 	gc.session = AuthorizedSession(scoped_credentials)
 	sh = gc.open_by_url('https://docs.google.com/spreadsheets/d/1G1BzfuKTy3OjOex0r8WVohtgfWqXJlvxscc0tQQD0lQ/edit#gid=880015919')
-	worksheet = sh.worksheet("25 free")
+	worksheet = sh.worksheet(event)
 	list_of_entries = worksheet.get_all_values()
 	list_of_entries.pop(0)
-	return list_of_entries
+	return list_of_entries,event
 
 def timehandler(list_item):
 	time_list=list_item[-1].split('.')
@@ -50,7 +51,21 @@ def sortresults(result_list):
 		del i[-1]
 	return(result_list)
 
-result_list = collectEventResults()
+
+def publishResults(results_list,event):
+	results_list.insert(0,['NAME','TEAM','TIME'])
+	creds = service_account.Credentials.from_service_account_file('client_secret.json')
+	scoped_credentials = creds.with_scopes(['https://spreadsheets.google.com/feeds'])
+	gc = gspread.Client(auth=scoped_credentials)
+	gc.session = AuthorizedSession(scoped_credentials)
+	sh = gc.open_by_url('https://docs.google.com/spreadsheets/d/1xASygdL1KtOVCP-tKW4SZWTAEuPlp5w_3AhC1Tb1OgQ/edit#gid=0')
+	worksheet = sh.add_worksheet(title=event, rows="100", cols="20")
+	sh.values_update(event+'!A1',params={'valueInputOption':'RAW'},body={'values': results_list})
+	print ('Results publish: success!')
+
+
+result_list,event = collectEventResults()
 updated_results=timeconverter(result_list)
 results_to_sort = caltime(updated_results)
-sortresults(results_to_sort)
+sorted_results = sortresults(results_to_sort)
+publishResults(sorted_results,event)
